@@ -1,6 +1,18 @@
 // Shared by the browser app and the dev server's /api/scan route.
 
-export const CATEGORIES = ['Produce', 'Dairy & eggs', 'Protein', 'Leftovers', 'Drinks', 'Pantry', 'Other'] as const;
+export const CATEGORIES = [
+  'Produce',
+  'Dairy & eggs',
+  'Protein',
+  'Leftovers',
+  'Drinks',
+  'Bakery',
+  'Condiments & sauces',
+  'Snacks',
+  'Frozen',
+  'Pantry',
+  'Other',
+] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 // "count" = 8 eggs, "percent" = ~40% of the oat milk left, "package" = 1 bag of spinach.

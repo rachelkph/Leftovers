@@ -9,17 +9,47 @@ const L = (name: string) => `/food/lib/${name}.jpg`;
  * Items with no match show their category photo behind their initials.
  */
 const PHOTO_MATCHES: Array<[RegExp, string | null]> = [
+  // Dishes and prepared foods first, so "chicken soup" shows soup and "leftover pizza" shows pizza.
+  [/pizza/i, L('pizza')],
+  [/curry|tikka|korma|dal\b|daal/i, L('curry')],
+  [/soup|stew|broth|chowder|ramen|pho\b/i, L('soup')],
+  [/dumpling|gyoza|potsticker|wonton|bao\b/i, L('dumplings')],
+  // Prepared foods, so "strawberry jam" shows jam and "dill pickles" shows pickles.
+  [/granola|muesli/i, L('granola')],
+  [/take-?out|takeaway|to-go/i, L('takeout')],
+  [/sandwich|deli turkey|turkey slices|sliced turkey|deli meat|cold cuts/i, L('deli-turkey')],
+  [/mustard|dijon/i, L('mustard')],
+  [/mayo|aioli/i, L('mayonnaise')],
+  [/soy sauce|tamari/i, L('soy-sauce')],
+  [/chocolate|cocoa|cacao/i, L('chocolate')],
+  [/cereal|corn ?flakes|cheerios/i, L('cereal')],
+  [/cracker/i, L('crackers')],
+  [/\bchips\b|crisps/i, L('chips')],
+  [/hummus|houmous/i, L('hummus')],
+  [/kimchi|sauerkraut/i, L('kimchi')],
+  [/pickle|gherkin/i, L('pickles')],
+  [/salsa/i, L('salsa')],
+  [/\bjam\b|jelly|marmalade|preserves/i, L('jam')],
+
   // Specific names that would otherwise be caught by a shorter word below.
   [/pineapple/i, L('pineapple')],
-  [/peanut butter|almond butter|buttermilk/i, null],
-  [/sweet potato|yam/i, null],
-  [/egg ?plant|aubergine/i, null],
+  [/grapefruit/i, L('grapefruit')],
+  [/watermelon/i, L('watermelon')],
+  [/peanut butter|almond butter/i, null],
+  [/sweet potato|\byams?\b/i, L('sweet-potatoes')],
+  [/egg ?plant|aubergine/i, L('eggplant')],
   [/orange juice|apple juice|juice/i, L('cat-drinks')],
-  [/cream cheese|ice cream|sour cream|cream/i, null],
+  [/cream cheese/i, L('cream-cheese')],
+  [/ice cream|gelato|sorbet/i, L('ice-cream')],
+  [/sour cream|cr[eè]me fra[iî]che/i, L('sour-cream')],
+  [/half and half|half & half|heavy cream|whipping cream|\bcream\b|buttermilk/i, L('milk')],
+  [/cold brew|iced coffee|coffee/i, L('cold-brew')],
+  [/kombucha/i, L('kombucha')],
+  [/sparkling water|seltzer|soda water|mineral water|\bwater\b/i, L('sparkling-water')],
   [/spring onion|green onion|scallion/i, L('spring-onions')],
   [/green bean|string bean/i, L('green-beans')],
+  [/brussels/i, L('brussels-sprouts')],
   [/parmesan|parmigiano|pecorino/i, L('parmesan')],
-  [/watermelon/i, null],
   [/popcorn/i, null],
   [/black pepper|peppercorn|pepper flakes|cayenne|chilli powder/i, null],
 
@@ -27,11 +57,14 @@ const PHOTO_MATCHES: Array<[RegExp, string | null]> = [
   [/strawberr/i, '/food/strawberry.jpg'],
   [/raspberr/i, L('raspberries')],
   [/blueberr/i, L('blueberries')],
+  [/blackberr/i, L('blackberries')],
+  [/\bberries\b|mixed berr/i, L('blueberries')],
   [/cherr(y|ies)(?! tomato)/i, '/food/cherries.jpg'],
-  [/grape(?!fruit)/i, L('grapes')],
+  [/grape/i, L('grapes')],
   [/apple/i, L('apple')],
   [/pear\b|pears/i, L('pear')],
   [/peach|nectarine/i, '/food/peach.jpg'],
+  [/\bplums?\b/i, L('plums')],
   [/mango/i, L('mango')],
   [/kiwi/i, L('kiwi')],
   [/banana/i, '/food/bananas.jpg'],
@@ -49,6 +82,9 @@ const PHOTO_MATCHES: Array<[RegExp, string | null]> = [
   [/carrot/i, L('carrots')],
   [/celery/i, L('celery')],
   [/cucumber/i, L('cucumber')],
+  [/zucchini|courgette/i, L('zucchini')],
+  [/okra/i, L('okra')],
+  [/\bleeks?\b/i, L('leeks')],
   [/pepper|capsicum/i, L('bell-pepper')],
   [/onion|shallot/i, L('onion')],
   [/garlic/i, L('garlic')],
@@ -56,19 +92,23 @@ const PHOTO_MATCHES: Array<[RegExp, string | null]> = [
   [/potato/i, L('potatoes')],
   [/mushroom/i, L('mushrooms')],
   [/corn\b|sweetcorn|corn on/i, L('corn')],
-  [/\bpeas?\b|edamame/i, L('peas')],
+  [/\bpeas?\b|edamame|frozen veg|mixed veg|stir.?fry mix/i, L('peas')],
+  [/pesto/i, L('pesto')],
   [/parsley|cilantro|coriander|basil|dill|mint|herb/i, L('herbs')],
 
   // Dairy & eggs
-  [/egg/i, '/food/eggs.jpg'],
+  [/\beggs?\b|egg whites?|egg yolks?/i, '/food/eggs.jpg'],
   [/yog(h)?urt|skyr|kefir/i, '/food/yogurt.jpg'],
   [/butter/i, '/food/butter.jpg'],
   [/milk/i, L('milk')],
-  [/cheese|cheddar|brie|gouda|feta|halloumi|mozzarella|camembert/i, L('cheese')],
+  [/cheese|cheddar|brie|gouda|feta|halloumi|mozzarella|camembert|ricotta/i, L('cheese')],
 
   // Protein
+  [/chicken/i, L('chicken')],
   [/salmon|trout/i, '/food/salmon.jpg'],
-  [/sardine|anchov|tuna can|tinned fish/i, '/food/sardines.jpg'],
+  [/\btuna\b/i, L('tuna')],
+  [/sardine|anchov|tinned fish/i, '/food/sardines.jpg'],
+  [/\bcod\b|haddock|tilapia|halibut|pollock|white ?fish|hake/i, L('white-fish')],
   [/shrimp|prawn/i, L('shrimp')],
   [/sausage|chorizo|bratwurst|hot dog/i, L('sausages')],
   [/pork|bacon|ham\b/i, L('pork')],
@@ -76,9 +116,17 @@ const PHOTO_MATCHES: Array<[RegExp, string | null]> = [
   [/tofu|tempeh/i, '/food/tofu.jpg'],
 
   // Everything else
-  [/bread|loaf|baguette|sourdough|bagel|\bbuns?\b|\brolls?\b/i, L('bread')],
+  [/baguette|french bread/i, L('baguette')],
+  [/pita|flatbread|naan/i, L('tortillas')],
+  [/croissant|brioche|english muffin|muffins?\b/i, L('bread')],
+  [/bread|loaf|sourdough|bagel|\bbuns?\b|\brolls?\b/i, L('bread')],
   [/tortilla|wrap|quesadilla/i, L('tortillas')],
   [/pasta|penne|spaghetti|noodle|macaroni|fusilli|lasagn/i, L('pasta')],
+  [/\brice\b|risotto/i, L('rice')],
+  [/\boats?\b|oatmeal|porridge/i, L('oats')],
+  [/\bnuts?\b|almonds|cashews?|walnuts?|pecans?|pistachios?|peanuts\b|hazelnuts?/i, L('nuts')],
+  [/\bbeans?\b|chickpeas?|garbanzo|lentils?/i, L('beans')],
+  [/olive oil|\boil\b/i, L('olive-oil')],
 ];
 
 const CATEGORY_PHOTOS: Record<Category, string> = {
@@ -87,6 +135,10 @@ const CATEGORY_PHOTOS: Record<Category, string> = {
   Protein: L('cat-protein'),
   Leftovers: L('cat-leftovers'),
   Drinks: L('cat-drinks'),
+  Bakery: L('baguette'),
+  'Condiments & sauces': L('salsa'),
+  Snacks: L('chips'),
+  Frozen: L('peas'),
   Pantry: L('cat-pantry'),
   Other: L('cat-other'),
 };
@@ -137,26 +189,46 @@ export const DEFAULT_SHELF_LIFE: Record<Category, number> = {
   Protein: 3,
   Leftovers: 4,
   Drinks: 10,
+  Bakery: 5,
+  'Condiments & sauces': 60,
+  Snacks: 60,
+  Frozen: 90,
   Pantry: 90,
   Other: 7,
 };
 
-/** Where things live in the fridge view. 3 = crisper drawer. */
-export function shelfFor(category: Category): number {
-  switch (category) {
-    case 'Dairy & eggs':
-    case 'Drinks':
-      return 0;
-    case 'Protein':
-      return 1;
-    case 'Produce':
-      return 3;
-    default:
-      return 2;
-  }
-}
+/**
+ * One shelf per category, top to bottom, the way a real fridge is usually stocked.
+ * Produce lives in the crisper drawer at the bottom.
+ */
+export const SHELF_ORDER: Category[] = [
+  'Dairy & eggs',
+  'Drinks',
+  'Protein',
+  'Leftovers',
+  'Condiments & sauces',
+  'Bakery',
+  'Snacks',
+  'Frozen',
+  'Pantry',
+  'Other',
+  'Produce',
+];
 
-export const SHELF_LABELS = ['Dairy, eggs & drinks', 'Protein', 'Leftovers & everything else', 'Crisper · produce'];
+/** What each shelf is called inside the fridge. */
+export const SHELF_NAMES: Record<Category, string> = {
+  'Dairy & eggs': 'Dairy & eggs',
+  Drinks: 'Drinks',
+  Protein: 'Protein',
+  Leftovers: 'Leftovers',
+  'Condiments & sauces': 'Condiments & sauces',
+  Bakery: 'Bakery',
+  Snacks: 'Snacks',
+  Frozen: 'Freezer',
+  Pantry: 'Pantry',
+  Other: 'Everything else',
+  Produce: 'Crisper · produce',
+};
 
 export function quantityLabel(qty: number, unit: Unit): string {
   if (unit === 'percent') return `~${Math.round(qty)}% left`;

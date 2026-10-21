@@ -23,11 +23,13 @@ export function Home({ onAdd }: { onAdd: () => void }) {
 
   return (
     <div className="home">
-      <aside className="home__door">
-        <Fridge settings={settings} eatSoon={soon} onToggleDoor={() => navigate('/fridge?open=1')} onEatSoonClick={open} />
-        <Link to="/fridge/customize" className="mono home__customize">
-          Customize door
-        </Link>
+      <aside className="home__side">
+        <div className="home__door">
+          <Fridge settings={settings} eatSoon={soon} onToggleDoor={() => navigate('/fridge?open=1')} onEatSoonClick={open} />
+          <Link to="/fridge/customize" className="mono home__customize">
+            Customize door
+          </Link>
+        </div>
       </aside>
 
       <section className="home__content">

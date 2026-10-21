@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { freshnessLabel, isEatSoon, lifeProgress, shortDate } from '../lib/dates';
 import { heroPhotoFor, maxFor, quantityLabel, stepFor } from '../lib/food';
 import { IMAGE_ACCEPT, toThumbnail } from '../lib/image';
+import { moveToCategory } from '../lib/edit';
 import { leaveThen, usePulse } from '../lib/motion';
 import { actions } from '../lib/store';
 import { showToast } from '../lib/toast';
@@ -13,11 +14,13 @@ interface Props {
   shared: boolean;
   /** Called after the item leaves the fridge, so the parent can pick another. */
   onClosed?: () => void;
+  /** Close the panel and go back to the overview, without changing the item. */
+  onDismiss?: () => void;
 }
 
 const UNIT_NAMES: Record<Unit, string> = { count: 'Count', percent: 'How full (%)', package: 'Packages' };
 
-export function ItemPanel({ item, shared, onClosed }: Props) {
+export function ItemPanel({ item, shared, onClosed, onDismiss }: Props) {
   const [editing, setEditing] = useState(false);
   useEffect(() => setEditing(false), [item.id]);
 
@@ -37,7 +40,16 @@ export function ItemPanel({ item, shared, onClosed }: Props) {
 
   return (
     <article className="item-panel">
-      <ItemThumb item={item} src={heroPhotoFor(item)} className="item-panel__hero" />
+      <div className="item-panel__media">
+        <ItemThumb item={item} src={heroPhotoFor(item)} className="item-panel__hero" />
+        {onDismiss && (
+          <button type="button" className="item-panel__close" onClick={onDismiss} aria-label="Close details" title="Close (Esc)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+              <path d="M3 3l8 8M11 3l-8 8" />
+            </svg>
+          </button>
+        )}
+      </div>
       <div className="item-panel__head">
         <div>
           <span className="mono meta">
@@ -87,6 +99,15 @@ export function ItemPanel({ item, shared, onClosed }: Props) {
             </div>
           </div>
 
+          <div className="row-line">
+            <span className="label-strong">Category</span>
+            <select className="cell-input cell-select panel-select" aria-label={`Category of ${item.name}`} value={item.category} onChange={(e) => moveToCategory(item, e.target.value as Category)}>
+              {CATEGORIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
           {shared && (
             <div className="row-line">
               <span className="label-strong">Whose</span>
@@ -134,7 +155,7 @@ function EditForm({ item, shared }: { item: InventoryItem; shared: boolean }) {
       <div className="field-row">
         <label className="field">
           <span className="mono">Category</span>
-          <select value={item.category} onChange={(e) => actions.updateItem(item.id, { category: e.target.value as Category })}>
+          <select value={item.category} onChange={(e) => moveToCategory(item, e.target.value as Category)}>
             {CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
             ))}

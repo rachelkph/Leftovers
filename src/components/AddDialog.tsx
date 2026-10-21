@@ -4,6 +4,7 @@ import { IMAGE_ACCEPT, decodeImage, isImageFile, scan, scanPayloadFrom, thumbnai
 import { actions, type NewItem } from '../lib/store';
 import { showToast } from '../lib/toast';
 import { CATEGORIES, type Category, type ScanKind, type ScannedItem, type Unit } from '../lib/types';
+import { FoodNameInput } from './FoodNameInput';
 import { ItemThumb } from './ItemThumb';
 
 interface Props {
@@ -317,9 +318,10 @@ function RowEditor({ row, onChange }: { row: ReviewRow; onChange: (patch: Partia
     <div className="row-editor">
       <label className="field field--grow">
         <span className="mono">Name</span>
-        <input
+        <FoodNameInput
           value={row.name}
-          onChange={(e) => onChange({ name: e.target.value })}
+          onChange={(name) => onChange({ name })}
+          onPick={(s) => onChange({ name: s.name, category: s.category, unit: s.unit, shelfLifeDays: s.days })}
         />
       </label>
       <label className="field">
@@ -388,7 +390,16 @@ function ManualForm({ shared, onDone }: { shared: boolean; onDone: (item: NewIte
       <h2 className="serif dialog__title">add by hand</h2>
       <label className="field">
         <span className="mono">What is it?</span>
-        <input ref={nameInput} value={f.name} placeholder="e.g. Greek yogurt" onChange={(e) => setF({ ...f, name: e.target.value })} required />
+        <FoodNameInput
+          ref={nameInput}
+          value={f.name}
+          placeholder="Start typing — e.g. greek yogurt"
+          required
+          onChange={(name) => setF((cur) => ({ ...cur, name }))}
+          onPick={(s) =>
+            setF((cur) => ({ ...cur, name: s.name, category: s.category, unit: s.unit, quantity: s.quantity, days: s.days, daysTouched: false }))
+          }
+        />
       </label>
       <div className="field-row">
         <label className="field">

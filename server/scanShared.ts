@@ -10,7 +10,7 @@ For each item:
 - name: a short, plain, human name in sentence case ("Oat milk", "Chicken breast", "Greek yogurt"). Expand receipt abbreviations. No brand names unless the brand is the product's common name.
 - receiptText: the exact receipt line you read it from, or "" for an item photo.
 - isFood: false for non-food lines (paper towels, bags, tax, discounts, deposits, soap). Still include them so the person can see what was skipped.
-- category: the best fit from the allowed list.
+- category: the best fit from the allowed list. Bakery is bread, tortillas, bagels and pastries. Condiments & sauces is ketchup, mustard, mayo, jam, dressings, salsa, pesto, hummus, pickles and kimchi. Snacks is chips, crackers, nuts, granola, chocolate and bars. Frozen is anything sold frozen. Pantry is shelf-stable staples like rice, pasta, oats, cereal, canned goods and oil. Use Other only when nothing else fits.
 - quantity and unit: "count" for countable things (eggs → 12, bananas → 6), "package" for things bought as one pack/bag/tub/carton (spinach → 1), "percent" only for a photo of a partly used container (then 0–100 for how much is left). Default to quantity 1, unit "package" when unsure.
 - shelfLifeDays: typical days until it should be eaten, stored in a home fridge (or pantry for shelf-stable items), counted from purchase. A rough, conservative estimate.
 - confidence: "low" whenever you had to guess what the product is (cryptic abbreviation, blurry text, ambiguous packaging); otherwise "high".
