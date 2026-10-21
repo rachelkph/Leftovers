@@ -34,7 +34,7 @@ export async function scanWithApi(req: ScanRequest): Promise<ScanResponse> {
     });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
-      throw new ScanError('The scanner isn’t set up yet — add ANTHROPIC_API_KEY to .env and restart.', 503);
+      throw new ScanError('The scanner isn’t set up yet — add ANTHROPIC_API_KEY (to .env locally, or the site’s environment variables when hosted).', 503);
     }
     if (error instanceof Anthropic.RateLimitError) {
       throw new ScanError('Too many scans at once. Try again in a moment.', 429);
@@ -47,7 +47,7 @@ export async function scanWithApi(req: ScanRequest): Promise<ScanResponse> {
     }
     if (error instanceof Error && /api key|apiKey|authToken/i.test(error.message)) {
       // Thrown by the SDK constructor path when no credentials are configured.
-      throw new ScanError('The scanner isn’t set up yet — add ANTHROPIC_API_KEY to .env and restart.', 503);
+      throw new ScanError('The scanner isn’t set up yet — add ANTHROPIC_API_KEY (to .env locally, or the site’s environment variables when hosted).', 503);
     }
     throw error;
   }

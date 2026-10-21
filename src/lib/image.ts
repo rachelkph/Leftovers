@@ -1,4 +1,5 @@
 import type { ScanKind, ScanRequest, ScanResponse } from './types';
+import { accessToken } from './auth';
 
 /** What file pickers should offer: everything image-like, plus iPhone HEIC/HEIF by extension. */
 export const IMAGE_ACCEPT = 'image/*,.heic,.heif';
@@ -83,9 +84,11 @@ export async function toThumbnail(file: File): Promise<string> {
 }
 
 export async function scan(payload: ScanRequest): Promise<ScanResponse> {
+  // With cloud sync on, the hosted scanner only accepts signed-in requests.
+  const token = await accessToken();
   const res = await fetch('/api/scan', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(payload),
   });
   const body = (await res.json().catch(() => null)) as (ScanResponse & { error?: string }) | null;

@@ -33,9 +33,32 @@ When `npm run dev` starts, it prints whether scanning is on. Your food is saved 
 | Onboarding: name → just me / share → pick your fridge | `src/pages/Onboarding.tsx` |
 | Scanning (server): Claude vision → structured JSON | `server/scan.ts`, mounted by `server/vitePlugin.ts` |
 | Data: local-first store in `localStorage`, all writes go through `actions` | `src/lib/store.ts` |
+| Sync and sign-in (optional): Supabase, per-key settings merge, offline queue | `src/lib/sync.ts`, `src/lib/auth.ts`, `supabase/schema.sql` |
+| Hosting: website + signed-in-only scan function for Vercel | `scripts/build-vercel.mjs`, `server/vercelScan.ts` |
+
+## Sync across your devices (optional)
+
+Leftovers can keep one fridge in sync between your laptop and phone. You sign in with a link emailed to you (no password), and only your signed-in session can read or change your data. Each device keeps a local copy, so it opens instantly and works offline; changes upload in the background and other devices pick them up when you open or return to the app.
+
+**1. Supabase (free): the database and sign-in**
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**, paste [`supabase/schema.sql`](supabase/schema.sql), **Run**.
+3. **Authentication → URL Configuration**: set **Site URL** to your website's address, and add it (plus `http://localhost:5173`) under **Redirect URLs**.
+4. **Project Settings → API**: copy the **Project URL** and the **anon / publishable** key. Both are public by design. Never put the `service_role` key in this app.
+5. Sign in once on the live site, then turn off **Authentication → Sign In / Providers → Allow new users to sign up**, so nobody else can create an account.
+
+**2. Vercel (free): the website and the scan function**
+
+1. At [vercel.com](https://vercel.com), **Add New → Project** and import this repo. The build settings come from `vercel.json` (`npm run build:vercel`).
+2. Under **Environment Variables**, add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `ANTHROPIC_API_KEY`, and optionally `ALLOWED_EMAILS` (your email) as an extra lock on scanning.
+3. Deploy. In the [Anthropic Console](https://console.anthropic.com), set a monthly **spend limit** on the key.
+
+The hosted scanner (`server/vercelScan.ts`) refuses any request without a valid signed-in session, and refuses everything if the Supabase settings are missing, so it can't run up your bill.
+
+**To use sync while developing locally,** put the two `VITE_SUPABASE_*` values in `.env.local`. Without them the app stays local-only, exactly as before.
 
 ## Not built yet
 
-- **Accounts and real sharing.** Households, members and Mine/Shared exist in the UI and data model, but data lives on this device only. The next step is Supabase (auth, Postgres with row-level security, photo storage) behind the same `actions` API in `src/lib/store.ts`.
-- **Production hosting for `/api/scan`.** It runs inside the Vite dev/preview server today. Move `server/scan.ts` into a Supabase Edge Function (or any serverless function) when deploying.
+- **Sharing a fridge with other people.** Households, members and Mine/Shared exist in the UI and data model, but sync is per person: each account sees only its own food.
 - **Photos.** `public/food/` holds Creative Commons placeholders, some of which require attribution. See `CREDITS.md`, and replace them before launch.

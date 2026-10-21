@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signOut, useAuth } from '../lib/auth';
 import { actions, selectItems, selectSettings, useStore } from '../lib/store';
+import { cloudEnabled } from '../lib/supabase';
+import { useSyncStatus, type SyncStatus } from '../lib/sync';
 import { showToast } from '../lib/toast';
 
 export function Profile() {
@@ -99,6 +102,8 @@ export function Profile() {
         </p>
       </section>
 
+      {cloudEnabled && <AccountSection />}
+
       <section className="profile__section">
         <h2 className="serif">data</h2>
         <div className="btn-row">
@@ -150,5 +155,32 @@ export function Profile() {
         </div>
       </section>
     </div>
+  );
+}
+
+const SYNC_LABEL: Record<SyncStatus, string> = {
+  off: 'Sync is off.',
+  syncing: 'Syncing…',
+  synced: 'Synced across your devices.',
+  offline: 'Offline. Changes will sync when you’re back online.',
+  error: 'Couldn’t reach the cloud just now. Your changes are saved here and will sync later.',
+};
+
+/** Who's signed in, whether this device is in sync, and signing out. */
+function AccountSection() {
+  const { session } = useAuth();
+  const status = useSyncStatus();
+  return (
+    <section className="profile__section">
+      <h2 className="serif">account</h2>
+      <p className="meta">
+        Signed in as <strong>{session?.user.email}</strong>. {SYNC_LABEL[status]}
+      </p>
+      <div className="btn-row">
+        <button type="button" className="btn" onClick={() => void signOut()}>
+          Sign out
+        </button>
+      </div>
+    </section>
   );
 }

@@ -5,8 +5,8 @@ import type { Category, InventoryItem, ItemSource, Unit, Visibility } from './ty
 
 /**
  * Local-first store, persisted to localStorage.
- * Everything goes through the actions below so a synced backend (Supabase)
- * can replace persistence later without touching the UI.
+ * Everything goes through the actions below; when cloud sync is on (src/lib/sync.ts)
+ * each change is also uploaded, and changes from other devices arrive via applyRemote.
  */
 
 export interface Settings {
@@ -79,7 +79,24 @@ function withKnownMagnets(settings: Settings): Settings {
 let state: State = load();
 const listeners = new Set<() => void>();
 
-function commit(next: State) {
+/** What a local edit touched, so cloud sync knows what to upload. */
+export interface Change {
+  items?: string[]; // added or edited item ids
+  removed?: string[]; // deleted item ids
+  settings?: string[]; // changed settings keys (merged per key across devices)
+}
+let onLocalChange: ((change: Change) => void) | null = null;
+
+/** Cloud sync registers here to hear about local edits. */
+export function setLocalChangeHandler(handler: ((change: Change) => void) | null) {
+  onLocalChange = handler;
+}
+
+export function getState(): State {
+  return state;
+}
+
+function save(next: State) {
   state = next;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -87,6 +104,16 @@ function commit(next: State) {
     // Storage full (large photos) or blocked — keep working in memory.
   }
   listeners.forEach((l) => l());
+}
+
+function commit(next: State, change: Change) {
+  save(next);
+  onLocalChange?.(change);
+}
+
+/** Apply data that came from the cloud: saved locally, but not echoed back up. */
+export function applyRemote(next: State) {
+  save({ ...next, settings: withKnownMagnets({ ...DEFAULT_SETTINGS, ...next.settings }) });
 }
 
 function subscribe(listener: () => void) {
@@ -138,12 +165,12 @@ export function buildItem(input: NewItem): InventoryItem {
 export const actions = {
   addItems(inputs: NewItem[]): InventoryItem[] {
     const created = inputs.map(buildItem);
-    commit({ ...state, items: [...created, ...state.items] });
+    commit({ ...state, items: [...created, ...state.items] }, { items: created.map((i) => i.id) });
     return created;
   },
 
   updateItem(id: string, patch: Partial<InventoryItem>) {
-    commit({ ...state, items: state.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) });
+    commit({ ...state, items: state.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) }, { items: [id] });
   },
 
   setQuantity(id: string, quantity: number) {
@@ -160,19 +187,20 @@ export const actions = {
   },
 
   deleteItem(id: string) {
-    commit({ ...state, items: state.items.filter((i) => i.id !== id) });
+    commit({ ...state, items: state.items.filter((i) => i.id !== id) }, { removed: [id] });
   },
 
   updateSettings(patch: Partial<Settings>) {
-    commit({ ...state, settings: { ...state.settings, ...patch } });
+    commit({ ...state, settings: { ...state.settings, ...patch } }, { settings: Object.keys(patch) });
   },
 
   removeSampleFood() {
-    commit({ ...state, items: state.items.filter((i) => i.source !== 'sample') });
+    const removed = state.items.filter((i) => i.source === 'sample').map((i) => i.id);
+    commit({ ...state, items: state.items.filter((i) => i.source !== 'sample') }, { removed });
   },
 
   resetEverything() {
-    commit({ items: [], settings: DEFAULT_SETTINGS });
+    commit({ items: [], settings: DEFAULT_SETTINGS }, { removed: state.items.map((i) => i.id), settings: Object.keys(DEFAULT_SETTINGS) });
   },
 
   /** A believable starter fridge so a new person can look around. */
