@@ -38,15 +38,19 @@ When `npm run dev` starts, it prints whether scanning is on. Your food is saved 
 
 ## Sync across your devices (optional)
 
-Leftovers can keep one fridge in sync between your laptop and phone. You sign in with a link emailed to you (no password), and only your signed-in session can read or change your data. Each device keeps a local copy, so it opens instantly and works offline; changes upload in the background and other devices pick them up when you open or return to the app.
+Leftovers can keep one fridge in sync between your laptop and phone. You sign in with a 6-digit code emailed to you (no password), and only your signed-in session can read or change your data. Each device keeps a local copy, so it opens instantly and works offline; changes upload in the background and other devices pick them up when you open or return to the app.
 
-**1. Supabase (free): the database and sign-in**
+**1. Supabase: the database and sign-in**
 
-1. Create a project at [supabase.com](https://supabase.com).
+Leftovers can have its own Supabase project, or share one with another app: its tables are all prefixed `leftovers_`, and it never creates accounts (it signs in people who already exist in the project).
+
+1. Pick the project. For a new one: [supabase.com](https://supabase.com) → New project, then **Authentication → Users → Add user** with your email.
 2. **SQL Editor → New query**, paste [`supabase/schema.sql`](supabase/schema.sql), **Run**.
-3. **Authentication → URL Configuration**: set **Site URL** to your website's address, and add it (plus `http://localhost:5173`) under **Redirect URLs**.
+3. **Authentication → Emails → Magic Link** template: make sure the email shows the code. Add this line if it isn't there (another app using the template is unaffected):
+   ```html
+   <p>Or sign in with this code: <strong>{{ .Token }}</strong></p>
+   ```
 4. **Project Settings → API**: copy the **Project URL** and the **anon / publishable** key. Both are public by design. Never put the `service_role` key in this app.
-5. Sign in once on the live site, then turn off **Authentication → Sign In / Providers → Allow new users to sign up**, so nobody else can create an account.
 
 **2. Vercel (free): the website and the scan function**
 

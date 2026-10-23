@@ -14,6 +14,9 @@ import type { InventoryItem } from './types';
  */
 
 const META_KEY = 'leftovers:sync:v1';
+// Prefixed, so Leftovers can share a Supabase project with another app (see supabase/schema.sql).
+const ITEMS = 'leftovers_items';
+const SETTINGS = 'leftovers_settings';
 const PUSH_DELAY_MS = 800;
 const POLL_MS = 30_000;
 const PAGE = 500;
@@ -99,16 +102,16 @@ async function push() {
     ...removed.map((id) => ({ id, data: {}, deleted: true })),
   ];
   if (rows.length) {
-    const { error } = await db.from('items').upsert(rows, { onConflict: 'id' });
+    const { error } = await db.from(ITEMS).upsert(rows, { onConflict: 'id' });
     if (error) throw error;
   }
   if (settingsKeys.length) {
     // Merge per setting: start from the cloud's copy and overwrite only what changed here,
     // so two devices changing different settings don't undo each other.
-    const { data: row, error: readError } = await db.from('settings').select('data').maybeSingle();
+    const { data: row, error: readError } = await db.from(SETTINGS).select('data').maybeSingle();
     if (readError) throw readError;
     const merged = { ...(row?.data as Settings | undefined), ...pick(getState().settings, settingsKeys) } as Settings;
-    const { error } = await db.from('settings').upsert({ user_id: meta.userId, data: merged }, { onConflict: 'user_id' });
+    const { error } = await db.from(SETTINGS).upsert({ user_id: meta.userId, data: merged }, { onConflict: 'user_id' });
     if (error) throw error;
   }
   // Only clear what we sent; edits made while uploading stay queued.
@@ -130,7 +133,7 @@ async function pull() {
   let since = meta.lastPulled;
   const changed: { id: string; data: InventoryItem; deleted: boolean }[] = [];
   for (;;) {
-    let q = db.from('items').select('id, data, deleted, updated_at').order('updated_at', { ascending: true }).limit(PAGE);
+    let q = db.from(ITEMS).select('id, data, deleted, updated_at').order('updated_at', { ascending: true }).limit(PAGE);
     if (since) q = q.gt('updated_at', since);
     const { data, error } = await q;
     if (error) throw error;
@@ -140,7 +143,7 @@ async function pull() {
     if (data.length < PAGE) break;
   }
 
-  const { data: settingsRow, error: settingsError } = await db.from('settings').select('data, updated_at').maybeSingle();
+  const { data: settingsRow, error: settingsError } = await db.from(SETTINGS).select('data, updated_at').maybeSingle();
   if (settingsError) throw settingsError;
 
   const state = getState();
@@ -226,7 +229,7 @@ export async function startSync(userId: string) {
   if (meta.userId !== userId) {
     meta = { ...EMPTY_META, userId };
     // First sign-in here: fetch the cloud's settings before deciding whose to keep.
-    const { data } = await supabase.from('settings').select('updated_at').maybeSingle();
+    const { data } = await supabase.from(SETTINGS).select('updated_at').maybeSingle();
     const local = getState();
     meta.dirty = local.items.map((i) => i.id);
     meta.settingsKeys = !data && local.settings.onboarded ? Object.keys(local.settings) : [];

@@ -44,9 +44,18 @@ export function useAuth(): AuthState {
   );
 }
 
-/** Email a one-time sign-in link that comes back to this site. */
-export async function sendSignInLink(email: string) {
-  const { error } = await supabase!.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } });
+/**
+ * Email a one-time sign-in code. Codes rather than links: the Supabase project can be shared
+ * with another app whose email template links to that app's site, and a code typed here works
+ * in any browser on any device. Never creates an account: only existing users can sign in.
+ */
+export async function sendSignInCode(email: string) {
+  const { error } = await supabase!.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  if (error) throw error;
+}
+
+export async function verifySignInCode(email: string, code: string) {
+  const { error } = await supabase!.auth.verifyOtp({ email, token: code, type: 'email' });
   if (error) throw error;
 }
 
